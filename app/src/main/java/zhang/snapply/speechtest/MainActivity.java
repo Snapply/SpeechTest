@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
     }
     private void init(){
         List<Message> initinfo = new ArrayList<>();
-        Message info = new Message(getString(R.string.initIngo),1) ;
+        Message info = new Message(getString(R.string.initIngo),Message.Receive) ;
         initinfo.add(info);
         class initAdapter extends ArrayAdapter<Message>{
 
