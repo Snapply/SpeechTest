@@ -2,5 +2,5 @@
     <string name="app_name">SpeechTest</string>
     <string name="edit_hint">请输入想发送的信息</string>
     <string name="send_button">发 送</string>
-    <string name="initIngo">欢迎使用对话机器人</string>
+    <string name="initInfo">欢迎使用对话机器人</string>
 </resources>

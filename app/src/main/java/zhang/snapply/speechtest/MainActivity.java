@@ -2,6 +2,7 @@ package zhang.snapply.speechtest;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -10,23 +11,40 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import zhang.snapply.speechtest.Util.LogTool;
+import zhang.snapply.speechtest.Util.MainContext;
+import zhang.snapply.speechtest.data.Data;
 import zhang.snapply.speechtest.message.Message;
 import zhang.snapply.speechtest.net.Link;
 
 public class MainActivity extends Activity {
     private ListView listView;
     private EditText editText;
-    private Button button;
     private String sendMessage;
+    private zhang.snapply.speechtest.message.Adapter adapter;
+    private List<Message> list = new ArrayList<>();
+
+    /*
+    SharedPreferences sendinfo = new MainContext().getContext().getSharedPreferences("send_mag",MODE_PRIVATE);
+    SharedPreferences receiveinfo = new MainContext().getContext().getSharedPreferences("receive_msg",MODE_PRIVATE);
+    SharedPreferences.Editor sendEditor = sendinfo.edit();
+    SharedPreferences.Editor receiveEditor = receiveinfo.edit();
+    */
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,43 +52,56 @@ public class MainActivity extends Activity {
         setContentView(R.layout.layout_for_main);
         listView = (ListView) findViewById(R.id.main_list_area);
         editText = (EditText)findViewById(R.id.send_message);
-        button = (Button)findViewById(R.id.send_button);
+        Button button = (Button) findViewById(R.id.send_button);
         init();
+        adapter = new zhang.snapply.speechtest.message.Adapter(MainActivity.this,R.layout.layout_for_listview,list);
+        listView.setAdapter(adapter);
+        LogTool.print("Step 1");
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                LogTool.print("Send Button启动");
                 sendMessage = editText.getText().toString();
-                if (!(sendMessage.equals(null) || sendMessage.equals(" "))){
-                    new Link(sendMessage);
-                }
+                LogTool.print("发送内容:"+sendMessage);
+                //new Data(sendMessage,Message.Send);
+                list.add(new Message(sendMessage,Message.Send));
+                adapter.notifyDataSetChanged();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        LogTool.print("线程启动");
+                        Link link = new Link(sendMessage);
+                        Message message = link.Connect();
+                        list.add(message);
+                    }
+                });
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.notifyDataSetChanged();
+                        editText.setText("");
+                        listView.setSelection(list.size());
+                    }
+                });
             }
         });
     }
     private void init(){
-        List<Message> initinfo = new ArrayList<>();
-        Message info = new Message(getString(R.string.initIngo),Message.Receive) ;
-        initinfo.add(info);
-        class initAdapter extends ArrayAdapter<Message>{
-
-            protected int resourseId;
-
-            public initAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Message> objects) {
-                super(context, resource, objects);
-                resourseId = resource;
-            }
-
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                Message message = getItem(position);
-                View view = LayoutInflater.from(getContext()).inflate(resourseId,null);
-                TextView text = (TextView) view.findViewById(R.id.receive_text);
-                text.setText(message.getMsg());
-                return view;
-            }
-        }
-        initAdapter initAdapter = new initAdapter(MainActivity.this,R.layout.layout_for_listview,initinfo);
-        listView.setAdapter(initAdapter);
+        LogTool.print("进入init");
+        String initMsg = "{\"code\" : 100000," + "\"text:\" : \"" + getString(R.string.initInfo) + "\"}";
+        /*
+        TextView startText = (TextView)findViewById(R.id.receive_text);
+        startText.setText(getString(R.string.initInfo));
+        LinearLayout sendArea = (LinearLayout)findViewById(R.id.send_text_area);
+        LinearLayout receiveArea = (LinearLayout)findViewById(R.id.receive_text_area);
+        LinearLayout urlArea = (LinearLayout)findViewById(R.id.url_area);
+        sendArea.setVisibility(View.GONE);
+        urlArea.setVisibility(View.GONE);;
+        receiveArea.setVisibility(View.VISIBLE);
+        */
+        LogTool.print("init message==" + initMsg);
+        Message message = new Message(initMsg,Message.Receive);
+        list.add(message);
     }
 }
 

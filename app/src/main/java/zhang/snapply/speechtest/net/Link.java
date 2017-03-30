@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import zhang.snapply.speechtest.Util.LogTool;
+import zhang.snapply.speechtest.message.Message;
+
 /**
  * Created by Snapply Zhang on 2017/3/25.
  */
@@ -15,13 +18,15 @@ public class Link {
 
     private String info;
 
-    public Link(String msg){
-        info = msg;
+    public Link(String sendMessage) {
+        info = sendMessage;
     }
 
-    private void Connect(){
+    public Message  Connect(){
+        LogTool.print("进入Link-Tool方法");
+        Message response = null;
         try {
-            URL url = new URL(Address+"?key="+new credit().getAPIKey()+"&info="+this.info);
+            URL url = new URL(Address+"?key="+new credit().getAPIKey()+"&info="+info);
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(8000);
@@ -33,8 +38,11 @@ public class Link {
             while ((line = reader.readLine()) != null) {
                 builder.append(line);
             }
+            response = new Message(builder.toString(),Message.Receive);
+            LogTool.print(response.getMsg());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return response;
     }
 }
