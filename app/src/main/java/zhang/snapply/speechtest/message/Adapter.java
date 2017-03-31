@@ -17,10 +17,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import zhang.snapply.speechtest.MainActivity;
 import zhang.snapply.speechtest.R;
@@ -43,7 +46,7 @@ public class Adapter extends ArrayAdapter<Message> {
         if (convertView == null){
             view = LayoutInflater.from(getContext()).inflate(resourceId,null);
             viewHolder = new ViewHolder();
-            viewHolder.send_area = (LinearLayout)view.findViewById(R.id.send_text_area);
+            viewHolder.send_area = (LinearLayout)view.findViewById(R.id.send_layout);
             viewHolder.receive_area = (LinearLayout)view.findViewById(R.id.receive_layout);
             viewHolder.url_area = (LinearLayout)view.findViewById(R.id.url_area);
             viewHolder.url_title = (TextView)view.findViewById(R.id.url_title);
@@ -70,67 +73,100 @@ public class Adapter extends ArrayAdapter<Message> {
                 final JSONObject jsonObject = new JSONObject(msg.getMsg());
                 int type = jsonObject.getInt("code");
                 if (type == 100000){
+                    LogTool.print("type=100000");
                     viewHolder.url_area.setVisibility(View.GONE);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
                 } else if (type == 40001) {
+                    LogTool.print("type=40001");
                     viewHolder.url_area.setVisibility(View.GONE);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
                 } else if (type == 40002) {
+                    LogTool.print("type=40002");
                     viewHolder.url_area.setVisibility(View.GONE);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
                 } else if (type == 40004) {
+                    LogTool.print("type=40004");
                     viewHolder.url_area.setVisibility(View.GONE);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
                 } else if (type == 40007) {
+                    LogTool.print("type=40007");
                     viewHolder.url_area.setVisibility(View.GONE);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
                 } else if (type == 200000) {
+                    LogTool.print("type=200000");
+                    LogTool.print("URL="+jsonObject.getString("url"));
                     viewHolder.url_area.setVisibility(View.GONE);
-                    viewHolder.receive_text.setText(jsonObject.getString("text"));
-                    viewHolder.receive_text.setClickable(true);
-                    viewHolder.receive_text.setOnClickListener(new View.OnClickListener() {
+                    viewHolder.receive_text.setText(jsonObject.getString("text")+"\n\n请点击链接"+jsonObject.getString("url"));
+                   viewHolder.receive_area.setClickable(true);
+                    viewHolder.receive_area.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             try {
-                                String url = jsonObject.getString("url");
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setData(Uri.parse(url));
+                                intent.setData(Uri.parse(jsonObject.getString("url")));
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                               MainContext.getContext().startActivity(intent);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
                     });
                 } else if ((type == 302000)) {
+                    LogTool.print("type=302000");
                     viewHolder.url_area.setVisibility(View.VISIBLE);
+                    final int n = new Random().nextInt(jsonObject.getJSONArray("list").length()+1);
+                    final JSONObject object = jsonObject.getJSONArray("list").getJSONObject(n);
+                    LogTool.print("Object-->"+object.toString());
+                    LogTool.print(String.valueOf(n));
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
-                    viewHolder.url_title.setText(jsonObject.getJSONArray("list").getJSONObject(0).getString("article"));
-                    viewHolder.url_source.setText(jsonObject.getJSONArray("list").getJSONObject(0).getString("source"));
-                    viewHolder.url_pic.setImageURI(Uri.parse(jsonObject.getJSONArray("list").getJSONObject(0).getString("icon")));
+                    LogTool.print("Text:"+jsonObject.getString("text"));
+                    viewHolder.url_title.setText(object.getString("article"));
+                    LogTool.print("Article:"+object.getString("article"));
+                    viewHolder.url_source.setText(object.getString("source"));
+                    LogTool.print("Source:"+object.getString("source"));
+                    try {
+                        viewHolder.url_pic.setImageURI(Uri.parse(object.getString("icon")));
+                    } catch (Exception e) {
+                        LogTool.print("Url pic Exception-->"+e);
+                    }
+                    viewHolder.url_area.setClickable(true);
                     viewHolder.url_area.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             try {
-                                String url = jsonObject.getJSONArray("list").getJSONObject(0).getString("detailurl");
+                                String url = object.getString("detailurl");
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
                                 intent.setData(Uri.parse(url));
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                MainContext.getContext().startActivity(intent);
                             } catch (JSONException e) {
-                                e.printStackTrace();
+                                LogTool.print("Exception:"+e);
                             }
                         }
                     });
                 } else if (type == 308000) {
+                    LogTool.print("type=308000");
                     viewHolder.url_area.setVisibility(View.VISIBLE);
+                    JSONArray array = jsonObject.getJSONArray("list");
+                    int n = new Random().nextInt(array.length()+1);
+                    final JSONObject object = jsonObject.getJSONArray("list").getJSONObject(n);
                     viewHolder.receive_text.setText(jsonObject.getString("text"));
-                    viewHolder.url_title.setText(jsonObject.getJSONArray("list").getJSONObject(0).getString("article"));
-                    viewHolder.url_source.setText(jsonObject.getJSONArray("list").getJSONObject(0).getString("source"));
-                    viewHolder.url_pic.setImageURI(Uri.parse(jsonObject.getJSONArray("list").getJSONObject(0).getString("icon")));
+                    viewHolder.url_title.setText(object.getString("name"));
+                    viewHolder.url_source.setText(object.getString("info"));
+                    try {
+                        viewHolder.url_pic.setImageURI(Uri.parse(object.getString("icon")));
+                    } catch (Exception e) {
+                        LogTool.print("Url pic Exception-->"+e);
+                    }
                     viewHolder.url_area.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             try {
-                                String url = jsonObject.getJSONArray("list").getJSONObject(0).getString("detailurl");
+                                String url = object.getString("detailurl");
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 intent.setData(Uri.parse(url));
+                                MainContext.getContext().startActivity(intent);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }

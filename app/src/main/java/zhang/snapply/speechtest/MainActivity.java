@@ -66,6 +66,7 @@ public class MainActivity extends Activity {
                 //new Data(sendMessage,Message.Send);
                 list.add(new Message(sendMessage,Message.Send));
                 adapter.notifyDataSetChanged();
+                LogTool.print("新线程入口");
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -73,22 +74,24 @@ public class MainActivity extends Activity {
                         Link link = new Link(sendMessage);
                         Message message = link.Connect();
                         list.add(message);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
                     }
-                });
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                        editText.setText("");
-                        listView.setSelection(list.size());
-                    }
-                });
+                }).start();
+                LogTool.print("刷新点");
+                editText.setText("");
+                listView.setSelection(list.size());
+                editText.setNextFocusUpId(R.id.send_button);
             }
         });
     }
     private void init(){
         LogTool.print("进入init");
-        String initMsg = "{\"code\" : 100000," + "\"text:\" : \"" + getString(R.string.initInfo) + "\"}";
+        String initMsg = "{\"code\" : 100000," + "\"text\" : \"" + getString(R.string.initInfo) + "\"}";
         /*
         TextView startText = (TextView)findViewById(R.id.receive_text);
         startText.setText(getString(R.string.initInfo));
@@ -102,6 +105,9 @@ public class MainActivity extends Activity {
         LogTool.print("init message==" + initMsg);
         Message message = new Message(initMsg,Message.Receive);
         list.add(message);
+        for (Message message1 : list){
+            LogTool.print(message1.getMsg()+"\n");
+        }
     }
 }
 

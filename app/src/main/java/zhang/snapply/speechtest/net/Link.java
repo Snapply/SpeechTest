@@ -31,8 +31,11 @@ public class Link {
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(8000);
             connection.setReadTimeout(8000);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
             InputStream inputStream = connection.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,"utf-8"));
+            LogTool.print(reader.toString());
             StringBuilder builder = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
